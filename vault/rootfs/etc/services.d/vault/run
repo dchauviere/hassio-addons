@@ -1,0 +1,16 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the vault service
+# s6-overlay docs: https://github.com/just-containers/s6-overlay
+# ==============================================================================
+
+bashio::log.info "Starting Vault"
+
+ulimit -c 0
+
+mkdir -p /data/vault-db
+chown -R vault:vault /data/vault-db
+
+exec su-exec vault vault server \
+  -config="/etc/vault" \
+  "$@"

@@ -1,0 +1,27 @@
+# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
+name: Vault add-on
+version: "0.3.0"
+slug: vault
+description: Vault add-on
+url: "https://github.com/dchauviere/hassio-addons/tree/main/vault"
+arch:
+  - armhf
+  - armv7
+  - aarch64
+  - amd64
+  - i386
+init: false
+ports:
+  8200/tcp: 8200
+map:
+  - ssl
+image: "dawei06/{arch}-hassio-vault"
+backup: "cold"
+webui: http://[HOST]:[PORT:8200]/
+watchdog: http://[HOST]:[PORT:8200]/
+options:
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+schema:
+  certfile: str
+  keyfile: str
