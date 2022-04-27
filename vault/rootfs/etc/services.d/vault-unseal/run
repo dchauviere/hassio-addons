@@ -1,0 +1,42 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the vault service
+# s6-overlay docs: https://github.com/just-containers/s6-overlay
+# ==============================================================================
+
+bashio::log.info "Starting Vault Unseal"
+
+ulimit -c 0
+
+export VAULT_ADDR='http://127.0.0.1:8200'
+
+set +e
+vault status
+while [[ $? -eq 1 ]] ; do
+  sleep 10
+  vault status
+done
+set -e
+
+if [[ ! -f /data/VAULT-UNSEAL-KEY ]]; then
+  DATA=$(vault operator init -key-shares=1 -key-threshold=1 -format=json)
+  echo "$DATA" | jq -r '.unseal_keys_b64[0]' > /data/VAULT-UNSEAL-KEY
+
+  vault operator unseal "$(cat /data/VAULT-UNSEAL-KEY)"
+
+  vault login token="$(echo "$DATA" | jq -r .root_token)"
+
+  vault auth enable userpass
+  vault write auth/userpass/users/demo password=demo policies=admins
+
+  vault token revoke "$(echo "$DATA" | jq -r .root_token)"
+fi
+
+if [[ -f /etc/vault-unseal.yaml ]]; then
+  exec su-exec vault /usr/bin/vault-unseal \
+    --config="/etc/vault-unseal.yaml" \
+    "$@"
+else
+  s6-svc -O /var/run/s6/services/vault-unseal
+fi
+

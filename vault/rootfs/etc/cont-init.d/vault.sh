@@ -26,3 +26,12 @@ bashio::var.json \
   | tempio \
     -template /usr/share/tempio/vault.gtpl \
     -out /etc/vault/local.json
+
+if [[ -f "/data/VAULT-UNSEAL-KEY" ]]; then
+  jq ".ssl = ${ssl}|.unseal_key = \"$(cat /data/VAULT-UNSEAL-KEY)\"" /data/options.json \
+    | tempio \
+      -template /usr/share/tempio/vault-unseal.gtpl \
+      -out /etc/vault-unseal.yaml
+  chmod 600 /etc/vault-unseal.yaml
+  chown vault:vault /etc/vault-unseal.yaml
+fi

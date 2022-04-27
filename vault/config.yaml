@@ -1,15 +1,14 @@
-# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
 name: Vault add-on
-version: "0.3.0"
+version: "0.3.13"
 slug: vault
 description: Vault add-on
 url: "https://github.com/dchauviere/hassio-addons/tree/main/vault"
 arch:
-  - armhf
-  - armv7
   - aarch64
   - amd64
-  - i386
+#  - armhf
+#  - armv7
+#  - i386
 init: false
 ports:
   8200/tcp: 8200
