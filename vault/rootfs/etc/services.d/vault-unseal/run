@@ -27,7 +27,24 @@ if [[ ! -f /data/VAULT-UNSEAL-KEY ]]; then
   vault login token="$(echo "$DATA" | jq -r .root_token)"
 
   vault auth enable userpass
-  vault write auth/userpass/users/demo password=demo policies=admins
+  vault write auth/userpass/users/$(bashio::config 'init.login') password=$(bashio::config 'init.password') policies=admins
+
+  # PKI
+  dns_host=$(bashio::dns.host)
+  vault secrets enable pki
+  vault secrets tune -max-lease-ttl=8760h pki
+  vault write pki/root/generate/internal \
+    common_name=$(bashio::config 'init.pki.ca_common_name') \
+    ttl=262800h
+  vault write pki/config/urls \
+    issuing_certificates="http://${dns_host}:$(bashio::addon port 8200)/v1/pki/ca" \
+    crl_distribution_points="http://${dns_host}:$(bashio::addon port 8200)/v1/pki/crl"
+  vault write pki/roles/default \
+    allowed_domains="${dns_host#*.}" \
+    allow_subdomains=true \
+    max_ttl=8760h
+  vault write -format=json pki/issue/default \
+    common_name=$(bashio::dns.host)
 
   vault token revoke "$(echo "$DATA" | jq -r .root_token)"
 fi

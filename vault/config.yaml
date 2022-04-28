@@ -19,6 +19,12 @@ backup: "cold"
 webui: http://[HOST]:[PORT:8200]/
 watchdog: http://[HOST]:[PORT:8200]/
 options:
+  init:
+    login: admin
+    password: admin
+    pki:
+      ca_common_name: My CA
+      domain: lan
   certfile: fullchain.pem
   keyfile: privkey.pem
 schema:
