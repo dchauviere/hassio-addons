@@ -8,7 +8,12 @@ bashio::log.info "Starting Vault Unseal"
 
 ulimit -c 0
 
-export VAULT_ADDR='http://127.0.0.1:8200'
+if [[ ! -f /data/VAULT-UNSEAL-KEY ]]; then
+  export VAULT_ADDR='http://127.0.0.1:8200'
+else
+  export VAULT_ADDR='https://127.0.0.1:8200'
+  export VAULT_CACERT="/ssl/ca.pem"
+fi
 
 set +e
 vault status
@@ -26,27 +31,50 @@ if [[ ! -f /data/VAULT-UNSEAL-KEY ]]; then
 
   vault login token="$(echo "$DATA" | jq -r .root_token)"
 
+  vault policy write admins /usr/share/tempio/admin-policy.hcl
+
   vault auth enable userpass
   vault write auth/userpass/users/$(bashio::config 'init.login') password=$(bashio::config 'init.password') policies=admins
 
   # PKI
-  dns_host=$(bashio::dns.host)
+  dns_host=$(bashio::host.hostname)
+  if [[ "$dns_host" = "null" ]]; then
+    dns_host="localhost.localdomain"
+  fi
+  echo "DNS host : ${dns_host}"
   vault secrets enable pki
   vault secrets tune -max-lease-ttl=8760h pki
-  vault write pki/root/generate/internal \
-    common_name=$(bashio::config 'init.pki.ca_common_name') \
-    ttl=262800h
+  vault write -format=json pki/root/generate/internal \
+    "common_name=$(bashio::config 'init.ca_common_name')" \
+    ttl=262800h | jq -r .data.certificate > /ssl/ca.pem
   vault write pki/config/urls \
-    issuing_certificates="http://${dns_host}:$(bashio::addon port 8200)/v1/pki/ca" \
-    crl_distribution_points="http://${dns_host}:$(bashio::addon port 8200)/v1/pki/crl"
+    issuing_certificates="https://${dns_host}:$(bashio::addon.port 8200)/v1/pki/ca" \
+    crl_distribution_points="https://${dns_host}:$(bashio::addon.port 8200)/v1/pki/crl"
   vault write pki/roles/default \
     allowed_domains="${dns_host#*.}" \
     allow_subdomains=true \
     max_ttl=8760h
-  vault write -format=json pki/issue/default \
-    common_name=$(bashio::dns.host)
+  CERTDATA=$(vault write -format=json pki/issue/default \
+    "common_name=$dns_host" \
+    ip_sans=127.0.0.1 \
+  )
+  echo "$CERTDATA"
+  certfile="/ssl/$(bashio::config 'certfile')"
+  keyfile="/ssl/$(bashio::config 'keyfile')"
+
+  [[ -f "certfile" ]] && mv "$certfile" "${certfile}.bak"
+  [[ -f "keyfile" ]] && mv "$keyfile" "${keyfile}.bak"
+  echo "$CERTDATA" | jq -r '.data.certificate' > "$certfile"
+  echo "$CERTDATA" | jq -r '.data.private_key' > "$keyfile"
 
   vault token revoke "$(echo "$DATA" | jq -r .root_token)"
+
+  jq ".unseal_key = \"$(cat /data/VAULT-UNSEAL-KEY)\"" /data/options.json \
+    | tempio \
+      -template /usr/share/tempio/vault-unseal.gtpl \
+      -out /etc/vault-unseal.yaml
+  chmod 600 /etc/vault-unseal.yaml
+  chown vault:vault /etc/vault-unseal.yaml
 fi
 
 if [[ -f /etc/vault-unseal.yaml ]]; then

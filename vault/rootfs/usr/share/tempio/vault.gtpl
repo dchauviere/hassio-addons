@@ -15,7 +15,7 @@
       "tls_disable": 1,
 {{ end }}
       "tls_cert_file": "{{ .certfile }}",
-      "tls_key_file": "{{ .certfile }}"
+      "tls_key_file": "{{ .keyfile }}"
     }
   },
   "telemetry": {

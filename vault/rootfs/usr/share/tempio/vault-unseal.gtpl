@@ -13,9 +13,9 @@ max_check_interval: 30m
 
 # list of vault nodes to check, must include http/https, and a port (unless 80/443).
 vault_nodes:
-  - http{{ if .ssl }}s{{ end }}://localhost:8200
-  - http{{ if .ssl }}s{{ end }}://localhost:8200
-  - http{{ if .ssl }}s{{ end }}://localhost:8200
+  - https://localhost:8200
+  - https://localhost:8200
+  - https://localhost:8200
 
 # unseal tokens necessary to unseal any of the given vaults in the above node
 # list.
@@ -39,7 +39,7 @@ unseal_tokens:
 
 # skip tls checks for the given vault instance. useful if your instance doesn't
 # have a certificate which has all of the server hostnames on it.
-tls_skip_verify: false
+tls_skip_verify: true
 
 # email notifications. setting this to false will disable all notifications.
 email:
