@@ -1,5 +1,5 @@
 name: Vault add-on
-version: "0.3.28"
+version: "0.4.0"
 slug: vault
 description: Vault add-on
 url: "https://github.com/dchauviere/hassio-addons/tree/main/vault"
@@ -10,6 +10,7 @@ arch:
   - armv7
   - i386
 init: false
+startup: services
 ports:
   8200/tcp: 8200
 map:

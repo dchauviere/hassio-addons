@@ -75,6 +75,7 @@ if [[ ! -f /data/VAULT-UNSEAL-KEY ]]; then
       -out /etc/vault-unseal.yaml
   chmod 600 /etc/vault-unseal.yaml
   chown vault:vault /etc/vault-unseal.yaml
+  bashio::addon.restart
 fi
 
 if [[ -f /etc/vault-unseal.yaml ]]; then
