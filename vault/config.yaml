@@ -1,5 +1,5 @@
 name: Vault
-version: "0.5.1"
+version: "0.5.2"
 slug: vault
 description: Vault add-on with pki setup
 url: "https://github.com/dchauviere/hassio-addons/tree/main/vault"
@@ -10,7 +10,7 @@ arch:
   - armv7
   - i386
 init: false
-startup: application
+startup: services
 ports:
   8200/tcp: 8200
 map:
@@ -20,7 +20,6 @@ backup: "cold"
 webui: https://[HOST]:[PORT:8200]/
 watchdog: https://[HOST]:[PORT:8200]/
 hassio_api: true
-panel_admin: true
 panel_title: Vault
 panel_icon: mdi:shield-key
 options:
