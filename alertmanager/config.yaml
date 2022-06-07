@@ -1,0 +1,23 @@
+---
+name: Alertmanager
+version: dev
+slug: alertmanager
+description: Cloud native metrics
+startup: services
+ingress: true
+ingress_port: 9093
+ingress_entry: alert
+panel_icon: mdi:chart-timeline
+panel_title: Prometheus
+arch:
+  - aarch64
+  - amd64
+  - armv7
+hassio_api: true
+homeassistant_api: true
+map:
+  - share:rw
+ports:
+  9093/tcp: null
+ports_description:
+  9093/tcp: Not required for Ingress
